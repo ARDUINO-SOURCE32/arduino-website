@@ -222,6 +222,24 @@
   .strip h3{margin:0 0 6px;font-size:14px;font-weight:800}
   .strip p{margin:0;color:#52637a;font-size:12.5px;line-height:1.65}
 
+
+  .card{cursor:pointer}
+  .project-modal{position:fixed;inset:0;background:rgba(8,25,39,.65);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+  .project-modal.open{display:flex}
+  .modal-box{width:min(1080px,96vw);max-height:92vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 25px 70px rgba(0,0,0,.28)}
+  .modal-head{padding:22px 28px;border-bottom:1px solid #e4ebef;display:flex;justify-content:space-between;gap:20px;position:sticky;top:0;background:#fff;z-index:2}
+  .modal-head h2{margin:0 0 5px;font-size:25px}.modal-head p{margin:0;color:#607086;font-size:14px}
+  .close-modal{width:38px;height:38px;border:1px solid #d8e2e8;background:#fff;border-radius:8px;font-size:25px;cursor:pointer}
+  .modal-content{padding:24px 28px}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  .detail-section{border:1px solid #e1e9ee;border-radius:10px;padding:17px;background:#fbfdfe;margin-bottom:18px}
+  .detail-section h3{margin:0 0 11px;font-size:17px}.detail-section p{font-size:13px;line-height:1.7;color:#42566c}
+  .component-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}.component{padding:9px;background:#fff;border:1px solid #e2e9ed;border-radius:7px;font-size:13px;color:#33485e}.component b{color:#078f92}
+  .wiring-table{width:100%;border-collapse:collapse;font-size:12px}.wiring-table th,.wiring-table td{padding:8px;border-bottom:1px solid #e2e8ec;text-align:left}.wiring-table th{background:#f1f7f8}
+  .circuit{background:#fff;border:1px solid #dce7eb;border-radius:9px;padding:8px;overflow:auto}.circuit svg{width:100%;min-width:540px;height:260px}
+  .code-wrap{background:#10233a;border-radius:9px;overflow:auto}.code-wrap pre{margin:0;padding:16px;color:#dff9f8;font:12px/1.6 Consolas,"Courier New",monospace}
+  .detail-note{background:#eaf8f8;border-left:4px solid #07999c;padding:10px 12px;border-radius:5px;font-size:12px;color:#315468}
+  @media(max-width:800px){.detail-grid{grid-template-columns:1fr}.modal-content{padding:17px}.modal-head{padding:17px}.component-list{grid-template-columns:1fr}}
+
   /* Search state */
   .hidden{display:none!important}
   .no-results{
@@ -341,7 +359,7 @@
 
     <div class="cards" id="cards">
       <!-- Replace each .project-image with your project image later -->
-      <article class="card" data-search="esp32 smart plant monitor plant soil moisture temperature humidity">
+      <article class="card" data-project="plant" data-search="esp32 smart plant monitor plant soil moisture temperature humidity">
         <div class="project-image"><span class="tag">ESP32</span></div>
         <div class="card-body">
           <h3>Smart Plant Monitor</h3>
@@ -350,7 +368,7 @@
         </div>
       </article>
 
-      <article class="card" data-search="esp8266 wifi weather station weather thingspeak">
+      <article class="card" data-project="weather" data-search="esp8266 wifi weather station weather thingspeak">
         <div class="project-image"><span class="tag">ESP8266</span></div>
         <div class="card-body">
           <h3>WiFi Weather Station</h3>
@@ -359,7 +377,7 @@
         </div>
       </article>
 
-      <article class="card" data-search="esp32 wifi smart light bulb home automation">
+      <article class="card" data-project="light" data-search="esp32 wifi smart light bulb home automation">
         <div class="project-image"><span class="tag">ESP32</span></div>
         <div class="card-body">
           <h3>WiFi Smart Light</h3>
@@ -368,7 +386,7 @@
         </div>
       </article>
 
-      <article class="card" data-search="esp32 cam ip camera wifi video stream">
+      <article class="card" data-project="camera" data-search="esp32 cam ip camera wifi video stream">
         <div class="project-image"><span class="tag">ESP32-CAM</span></div>
         <div class="card-body">
           <h3>IP Camera with ESP32</h3>
@@ -377,7 +395,7 @@
         </div>
       </article>
 
-      <article class="card" data-search="esp8266 iot display dashboard oled mqtt sensor">
+      <article class="card" data-project="dashboard" data-search="esp8266 iot display dashboard oled mqtt sensor">
         <div class="project-image"><span class="tag">ESP8266</span></div>
         <div class="card-body">
           <h3>IoT Display Dashboard</h3>
@@ -423,6 +441,116 @@
     </div>
   </section>
 </main>
+
+
+<div class="project-modal" id="projectModal">
+ <div class="modal-box">
+  <div class="modal-head"><div><h2 id="modalTitle"></h2><p id="modalSubtitle"></p></div><button class="close-modal" id="closeModal">×</button></div>
+  <div class="modal-content" id="modalContent"></div>
+ </div>
+</div>
+<script>
+const projects={
+plant:{title:"Smart Plant Monitor",sub:"ESP32 • Soil moisture • Temperature & humidity",about:"Measures soil moisture, temperature and humidity with an ESP32. The readings can be sent to an online dashboard for remote plant monitoring.",parts:["ESP32 DevKit","Capacitive soil-moisture sensor","DHT22 temperature/humidity sensor","0.96-inch I2C OLED (optional)","5V USB supply","Breadboard + jumper wires"],wire:[["Soil AO","ESP32","GPIO 34"],["Soil VCC","ESP32","3.3V"],["Soil GND","ESP32","GND"],["DHT DATA","ESP32","GPIO 4"],["DHT VCC","ESP32","3.3V"],["DHT GND","ESP32","GND"]],code:`#include <DHT.h>
+#define SOIL_PIN 34
+#define DHT_PIN 4
+#define DHT_TYPE DHT22
+DHT dht(DHT_PIN,DHT_TYPE);
+void setup(){Serial.begin(115200);dht.begin();}
+void loop(){
+ int soil=analogRead(SOIL_PIN);
+ float t=dht.readTemperature(),h=dht.readHumidity();
+ Serial.printf("Soil:%d Temp:%.1fC Humidity:%.1f%%\\n",soil,t,h);
+ delay(2000);
+}`,type:"plant"},
+weather:{title:"WiFi Weather Station",sub:"ESP8266 • Temperature • Humidity • ThingSpeak",about:"Reads temperature and humidity and prepares the measurements for uploading to an IoT cloud service such as ThingSpeak.",parts:["NodeMCU ESP8266","DHT11 or DHT22","ThingSpeak account","USB 5V supply","2.4 GHz WiFi","Breadboard + jumper wires"],wire:[["DHT VCC","ESP8266","3.3V"],["DHT DATA","ESP8266","D2 / GPIO 4"],["DHT GND","ESP8266","GND"],["USB","ESP8266","Computer / 5V"],["WiFi","Router","2.4 GHz"]],code:`#include <ESP8266WiFi.h>
+#include <DHT.h>
+const char* ssid="YOUR_WIFI";
+const char* password="YOUR_PASSWORD";
+#define DHTPIN D2
+#define DHTTYPE DHT22
+DHT dht(DHTPIN,DHTTYPE);
+void setup(){
+ Serial.begin(115200); dht.begin();
+ WiFi.begin(ssid,password);
+ while(WiFi.status()!=WL_CONNECTED) delay(500);
+}
+void loop(){
+ float t=dht.readTemperature(),h=dht.readHumidity();
+ Serial.printf("Temp:%.1fC Humidity:%.1f%%\\n",t,h);
+ delay(15000);
+}`,type:"weather"},
+light:{title:"WiFi Smart Light",sub:"ESP32 • Web control • Relay",about:"Controls a low-voltage lamp from a web interface hosted by the ESP32. The board switches a relay when an ON or OFF command is received.",parts:["ESP32 DevKit","1-channel relay module","Low-voltage lamp / LED strip","Suitable power supply","2.4 GHz WiFi","Jumper wires"],wire:[["Relay VCC","ESP32","5V/VIN*"],["Relay GND","ESP32","GND"],["Relay IN","ESP32","GPIO 26"],["Load","Relay","COM + NO"],["ESP32","Router","WiFi"]],code:`#include <WiFi.h>
+#include <WebServer.h>
+const char* ssid="YOUR_WIFI";
+const char* password="YOUR_PASSWORD";
+WebServer server(80);
+const int RELAY=26;
+void setup(){
+ pinMode(RELAY,OUTPUT); digitalWrite(RELAY,LOW);
+ WiFi.begin(ssid,password);
+ while(WiFi.status()!=WL_CONNECTED) delay(300);
+ server.on("/on",[]{digitalWrite(RELAY,HIGH);server.send(200,"text/plain","Light ON");});
+ server.on("/off",[]{digitalWrite(RELAY,LOW);server.send(200,"text/plain","Light OFF");});
+ server.begin();
+}
+void loop(){server.handleClient();}`,type:"light",note:"Use a low-voltage lamp/LED for testing. Do not connect mains electricity unless you are qualified and using proper isolation and protection."},
+camera:{title:"IP Camera with ESP32",sub:"ESP32-CAM • WiFi • Live video",about:"Turns an ESP32-CAM into a small network camera. After WiFi setup, its camera server can provide a live stream in a browser.",parts:["ESP32-CAM board","OV2640 camera","USB-to-Serial adapter","Stable 5V supply","2.4 GHz WiFi","Jumper wires"],wire:[["5V","ESP32-CAM","5V"],["GND","ESP32-CAM","GND"],["U0R","USB-Serial TX","GPIO 3"],["U0T","USB-Serial RX","GPIO 1"],["GPIO 0","Programming","GND while flashing"]],code:`#include "esp_camera.h"
+#include <WiFi.h>
+const char* ssid="YOUR_WIFI";
+const char* password="YOUR_PASSWORD";
+void setup(){
+ Serial.begin(115200);
+ // Use the CameraWebServer example
+ // for your exact ESP32-CAM board.
+ Serial.println("Starting camera...");
+}
+void loop(){delay(1000);}`,type:"camera",note:"Camera pin definitions vary by ESP32-CAM board. Start with the CameraWebServer example for your exact board."},
+dashboard:{title:"IoT Display Dashboard",sub:"ESP8266 • OLED • MQTT • Sensor data",about:"Displays sensor readings locally on an OLED while publishing them to an MQTT broker. It demonstrates sensor → microcontroller → MQTT → dashboard.",parts:["NodeMCU ESP8266","0.96-inch SSD1306 I2C OLED","DHT11/DHT22","MQTT broker","Breadboard + jumper wires","WiFi connection"],wire:[["OLED VCC","ESP8266","3.3V"],["OLED GND","ESP8266","GND"],["OLED SDA","ESP8266","D2 / GPIO 4"],["OLED SCL","ESP8266","D1 / GPIO 5"],["DHT DATA","ESP8266","D5 / GPIO 14"],["DHT GND","ESP8266","GND"]],code:`#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#define W 128
+#define H 64
+Adafruit_SSD1306 display(W,H,&Wire);
+void setup(){
+ Serial.begin(115200);
+ display.begin(SSD1306_SWITCHCAPVCC,0x3C);
+ display.clearDisplay(); display.setTextSize(1);
+ display.setTextColor(SSD1306_WHITE);
+ display.setCursor(0,0); display.println("IoT Dashboard");
+ display.println("Connecting..."); display.display();
+}
+void loop(){
+ // Read sensor, publish MQTT and update OLED.
+ delay(2000);
+}`,type:"dashboard"}
+};
+
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));}
+function svg(t){
+ const label=t==="camera"?"ESP32-CAM":(t==="weather"||t==="dashboard"?"ESP8266":"ESP32");
+ let right="";
+ if(t==="plant") right='<rect x="350" y="40" width="175" height="65" rx="8" fill="#fff" stroke="#64788a"/><text x="437" y="68" text-anchor="middle" font-weight="700">SOIL SENSOR</text><text x="437" y="88" text-anchor="middle" font-size="11">AO → GPIO34</text><rect x="350" y="170" width="175" height="65" rx="8" fill="#fff" stroke="#64788a"/><text x="437" y="198" text-anchor="middle" font-weight="700">DHT22</text><text x="437" y="218" text-anchor="middle" font-size="11">DATA → GPIO4</text>';
+ if(t==="weather") right='<rect x="350" y="80" width="175" height="80" rx="8" fill="#fff" stroke="#64788a"/><text x="437" y="112" text-anchor="middle" font-weight="700">DHT22</text><text x="437" y="136" text-anchor="middle" font-size="11">D2 / GPIO4</text><rect x="350" y="195" width="175" height="40" rx="8" fill="#eaf8f8" stroke="#078f92"/><text x="437" y="220" text-anchor="middle" font-weight="700">WiFi → ThingSpeak</text>';
+ if(t==="light") right='<rect x="350" y="70" width="175" height="85" rx="8" fill="#fff" stroke="#64788a"/><text x="437" y="104" text-anchor="middle" font-weight="700">RELAY</text><text x="437" y="128" text-anchor="middle" font-size="11">IN → GPIO26</text><rect x="350" y="185" width="175" height="45" rx="8" fill="#fff7e8" stroke="#b78b35"/><text x="437" y="213" text-anchor="middle" font-weight="700">LOW-VOLTAGE LAMP</text>';
+ if(t==="camera") right='<rect x="350" y="65" width="175" height="95" rx="8" fill="#fff" stroke="#64788a"/><text x="437" y="101" text-anchor="middle" font-weight="700">OV2640 CAMERA</text><text x="437" y="126" text-anchor="middle" font-size="11">Camera connector</text><rect x="350" y="195" width="175" height="40" rx="8" fill="#eaf8f8" stroke="#078f92"/><text x="437" y="220" text-anchor="middle" font-weight="700">PHONE / PC</text>';
+ if(t==="dashboard") right='<rect x="350" y="25" width="175" height="60" rx="8" fill="#fff" stroke="#64788a"/><text x="437" y="52" text-anchor="middle" font-weight="700">DHT SENSOR</text><text x="437" y="71" text-anchor="middle" font-size="11">Temp + Humidity</text><rect x="350" y="105" width="175" height="65" rx="8" fill="#fff" stroke="#64788a"/><text x="437" y="133" text-anchor="middle" font-weight="700">OLED DISPLAY</text><text x="437" y="153" text-anchor="middle" font-size="11">I2C SDA + SCL</text><rect x="350" y="195" width="175" height="40" rx="8" fill="#eaf8f8" stroke="#078f92"/><text x="437" y="220" text-anchor="middle" font-weight="700">MQTT BROKER</text>';
+ return `<svg viewBox="0 0 570 260" xmlns="http://www.w3.org/2000/svg"><text x="285" y="18" text-anchor="middle" font-size="15" font-weight="800" fill="#10233a">Circuit / Connection Diagram</text><rect x="35" y="75" width="175" height="120" rx="10" fill="#eaf8f8" stroke="#078f92" stroke-width="2"/><text x="122" y="120" text-anchor="middle" font-size="16" font-weight="700" fill="#10233a">${label}</text><text x="122" y="145" text-anchor="middle" font-size="12" fill="#607086">3.3V • GND • GPIO</text><path d="M210 110 H350" stroke="#07999c" stroke-width="3"/><path d="M210 155 H320 V215 H350" stroke="#07999c" stroke-width="3" fill="none"/>${right}</svg>`;
+}
+function openProject(key){
+ const p=projects[key],m=document.getElementById("projectModal");
+ document.getElementById("modalTitle").textContent=p.title;document.getElementById("modalSubtitle").textContent=p.sub;
+ const parts=p.parts.map(x=>`<div class="component">${esc(x)}</div>`).join("");
+ const rows=p.wire.map(x=>`<tr><td>${esc(x[0])}</td><td>${esc(x[1])}</td><td>${esc(x[2])}</td></tr>`).join("");
+ document.getElementById("modalContent").innerHTML=`<div class="detail-grid"><div><section class="detail-section"><h3>About this project</h3><p>${esc(p.about)}</p>${p.note?`<div class="detail-note">${esc(p.note)}</div>`:""}</section><section class="detail-section"><h3>Components required</h3><div class="component-list">${parts}</div></section><section class="detail-section"><h3>Wiring connections</h3><table class="wiring-table"><thead><tr><th>Component pin</th><th>Connect to</th><th>Pin / purpose</th></tr></thead><tbody>${rows}</tbody></table></section></div><div><section class="detail-section"><h3>Circuit diagram</h3><div class="circuit">${svg(p.type)}</div></section><section class="detail-section"><h3>Arduino / ESP code</h3><div class="code-wrap"><pre>${esc(p.code)}</pre></div></section></div></div>`;
+ m.classList.add("open");document.body.style.overflow="hidden";
+}
+function closeProject(){document.getElementById("projectModal").classList.remove("open");document.body.style.overflow="";}
+document.querySelectorAll(".card").forEach(c=>{c.addEventListener("click",()=>openProject(c.dataset.project));});
+document.getElementById("closeModal").onclick=closeProject;
+document.getElementById("projectModal").onclick=e=>{if(e.target.id==="projectModal")closeProject();};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeProject();});
+</script>
 
 <script>
   const input = document.getElementById('searchInput');
